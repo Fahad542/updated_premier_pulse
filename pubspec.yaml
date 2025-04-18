@@ -4,7 +4,7 @@ description: A new Flutter project.
 
 publish_to: 'none'
 
-version: 10.0.0+10
+version: 11.0.0+11
 
 environment:
   sdk: ">=2.17.1 <3.0.0"
@@ -50,7 +50,7 @@ flutter_icons:
   remove_alpha_ios: true
   background_color: "#ffffff"
   adaptive_icon_background: "#ffffff"
-  image_path: "assets/ico2.png"
+  image_path: "assets/premierpulse.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
 
   flutter_lints: ^2.0.0

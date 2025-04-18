@@ -587,6 +587,31 @@ class SalesHeirarchyViewModel with ChangeNotifier {
   }
 
 
+  Future<List<UserDetails>> fetchallheirarchy() async {
+    try {
+      final List<Map<String, dynamic>> maps = await _database.query(
+        'user_details',
+        where: 'EmpDesignation != ? AND EmpName != ?', // Filter condition
+        whereArgs: ['DSF', 'Untagged'], // Value to exclude
+        orderBy: 'Depth ASC',
+      );
+
+      return List.generate(maps.length, (i) {
+        return UserDetails(
+          designation: maps[i]['EmpDesignation'],
+          empCode: maps[i]['EmpCode'],
+          empName: maps[i]['EmpName'],
+          Depth: maps[i]['Depth'],
+          reportingTo: maps[i]['ReportTo'],
+          isCheck: maps[i]['is_check'] == 0,
+        );
+      });
+    } catch (e) {
+      print("Error: ${e.toString()}");
+      return [];
+    }
+  }
+
 
 
 

@@ -46,10 +46,10 @@ class _customer_wiseState extends State<customer_wise> {
 
   String sale = '';
   SortOptions selectedSortOption = SortOptions.Select;
- var originalStoredata ;
+  var originalStoredata ;
 
   void select(BuildContext context) {
-    //SortOptions? selected = SortOptions.Select;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -112,7 +112,8 @@ class _customer_wiseState extends State<customer_wise> {
   DropdownMenuItem<SortOptions> buildDropdownItem(
       SortOptions value,
       String label,
-      ) {
+      )
+  {
 
     return DropdownMenuItem(
       value: value,
@@ -163,13 +164,14 @@ class _customer_wiseState extends State<customer_wise> {
         return DateTime.parse(formattedDate);
       }
       return null;
-    } catch (e) {
+    } catch ( e ) {
       print("Invalid date format: $dateStr");
       return null;
     }
   }
 
-  Future<void> getsales() async {
+  Future<void> getsales() async
+  {
 
     setState(() {
       startDateFormatted = DateFormat('yyyy,MM,dd').format(startDate!);
@@ -187,7 +189,8 @@ class _customer_wiseState extends State<customer_wise> {
 
       setState(() {
         totals = 0;
-        for (int i = 0; i < customerDataFuture.length; i++) {
+        for (int i = 0; i < customerDataFuture.length; i++)
+        {
           double salesValue = customerDataFuture[i]['Sales_Inc_ST'] ?? 0;
           totals += salesValue.round();
         }

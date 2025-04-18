@@ -282,218 +282,221 @@ fontWeight: FontWeight.bold,
         ]),
             bottomNavigationBar:
 
-            AttendanceButton(
-              onPressed: () async {
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: AttendanceButton(
+                onPressed: () async {
 
-                var connectivityResult = await Connectivity().checkConnectivity();
-                if (connectivityResult == ConnectivityResult.none) {
+                  var connectivityResult = await Connectivity().checkConnectivity();
+                  if (connectivityResult == ConnectivityResult.none) {
 
-                  Fluttertoast.showToast(
-                    msg: "No Internet Connection",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    fontSize: 16.0,
-                  );
-                  return;
-                }
-
-                var permission = await Geolocator.requestPermission();
-                if (permission == LocationPermission.always || permission == LocationPermission.whileInUse && latitude=='' && longitude=='') {
-
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Location Permission Required'),
-                        content: Text('Please enable location access in your device settings to use this feature.'),
-                        actions: <Widget>[
-                          TextButton(
-                            child: Text('OK'),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                }
-
-
-                await salesViewModel.initializeDatabase();
-                bool isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
-
-                if (!isTableEmpty) {
-
-                  Fluttertoast.showToast(
-                    msg: "Data is already Synced",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: AppColors.ligthgreen,
-                    textColor: Colors.white,
-                    fontSize: 16.0,
-                  );
-                  return;
-                }
-
-                Position position = await Geolocator.getCurrentPosition(
-                  desiredAccuracy: LocationAccuracy.best,
-                );
-
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      backgroundColor: Colors.transparent,
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.greencolor),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            "Please wait...",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Fluttertoast.showToast(
+                      msg: "No Internet Connection",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.SNACKBAR,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
                     );
-                  },
-                );
+                    return;
+                  }
 
-                try {
-                  final measure = await measure_repository();
-                  await salesViewModel.initializeDatabase();
-                  await salesViewModel.fetchHeirarchyListApi();
-                  await salesViewModel.fetchTeamCompanyApi();
-                  await salesViewModel.fetchbranchapi();
-                  await measure.database();
-                  await measure.fetchDataAndSave();
-                  await salesViewModel.initializeDatabase();
-                  final isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
-                  if(!isTableEmpty){
-                    setState(() {
-                      lastSyncDate = DateFormat.yMd().format(DateTime.now());
-                      currentTime = DateFormat.jm().format(DateTime.now());
-                      latitude = position.latitude;
-                      longitude = position.longitude;
-                    });
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
-                    await prefs.setString('lastSyncDate', lastSyncDate!);
-                    await prefs.setString('currentTime', currentTime!);
-                    SharedPreferences pref = await SharedPreferences.getInstance();    // await pref.setDouble('latitude', latitude);
-                    await pref.setDouble('longitude', longitude);
-                    await pref.setDouble('latitude', latitude);
-                    currentdate.date=lastSyncDate;
-                    print(currentdate.date);
-                    Navigator.of(context).pop();
+                  var permission = await Geolocator.requestPermission();
+                  if (permission == LocationPermission.always || permission == LocationPermission.whileInUse && latitude=='' && longitude=='') {
+
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          backgroundColor: AppColors.greencolor,
-                          title: Text(
-                            "Data Synced",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          content: Text(
-                            "Your data has been sync.",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          actions: [
+                          title: Text('Location Permission Required'),
+                          content: Text('Please enable location access in your device settings to use this feature.'),
+                          actions: <Widget>[
                             TextButton(
+                              child: Text('OK'),
                               onPressed: () {
                                 Navigator.of(context).pop();
-                                FocusScope.of(context).unfocus();
+
                               },
-                              child: Text(
-                                "OK",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                ),
-                              ),
                             ),
                           ],
                         );
                       },
-                    );}
-                  else{
-                    Utils.flushBarErrorMessage("Error to load data", context);
+                    );
                   }
-                } catch (error) {
 
-                  Navigator.of(context).pop();
 
+                  await salesViewModel.initializeDatabase();
+                  bool isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+
+                  if (!isTableEmpty) {
+
+                    Fluttertoast.showToast(
+                      msg: "Data is already Synced",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.SNACKBAR,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: AppColors.ligthgreen,
+                      textColor: Colors.white,
+                      fontSize: 16.0,
+                    );
+                    return;
+                  }
+
+                  Position position = await Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.best,
+                  );
 
                   showDialog(
                     context: context,
+                    barrierDismissible: false,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          backgroundColor: Colors.red,
-                          title: Text(
-                            "Error",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        backgroundColor: Colors.transparent,
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.greencolor),
                             ),
-                          ),
-                          content: Text(
-                            "An error occurred while Sync Data.",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-
-                              },
-                              child: Text(
-                                "OK",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                ),
+                            SizedBox(height: 16),
+                            Text(
+                              "Please wait...",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
                               ),
-
-
-                            )]);
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   );
-                }
+
+                  try {
+                    final measure = await measure_repository();
+                    await salesViewModel.initializeDatabase();
+                    await salesViewModel.fetchHeirarchyListApi();
+                    await salesViewModel.fetchTeamCompanyApi();
+                    await salesViewModel.fetchbranchapi();
+                    await measure.database();
+                    await measure.fetchDataAndSave();
+                    await salesViewModel.initializeDatabase();
+                    final isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+                    if(!isTableEmpty){
+                      setState(() {
+                        lastSyncDate = DateFormat.yMd().format(DateTime.now());
+                        currentTime = DateFormat.jm().format(DateTime.now());
+                        latitude = position.latitude;
+                        longitude = position.longitude;
+                      });
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('lastSyncDate', lastSyncDate!);
+                      await prefs.setString('currentTime', currentTime!);
+                      SharedPreferences pref = await SharedPreferences.getInstance();    // await pref.setDouble('latitude', latitude);
+                      await pref.setDouble('longitude', longitude);
+                      await pref.setDouble('latitude', latitude);
+                      currentdate.date=lastSyncDate;
+                      print(currentdate.date);
+                      Navigator.of(context).pop();
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            backgroundColor: AppColors.greencolor,
+                            title: Text(
+                              "Data Synced",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              "Your data has been sync.",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  FocusScope.of(context).unfocus();
+                                },
+                                child: Text(
+                                  "OK",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );}
+                    else{
+                      Utils.flushBarErrorMessage("Error to load data", context);
+                    }
+                  } catch (error) {
+
+                    Navigator.of(context).pop();
 
 
-              },),
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            backgroundColor: Colors.red,
+                            title: Text(
+                              "Error",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              "An error occurred while Sync Data.",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+
+                                },
+                                child: Text(
+                                  "OK",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
+                                ),
+
+
+                              )]);
+                      },
+                    );
+                  }
+
+
+                },),
+            ),
 
         ),
 

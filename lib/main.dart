@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mvvm/res/color.dart';
 import 'package:mvvm/view/Splash_screen/splash_view.dart';
 import 'package:mvvm/view/Splash_screen/user_view_model.dart';
 import 'package:provider/provider.dart';
@@ -13,10 +14,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context)
   {
-    return MultiProvider(
+    return
+      MultiProvider(
       providers:
       [
-
         ChangeNotifierProvider( create: (_) => UserViewModel() )
       ],
       child: MaterialApp
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               title: 'Flutter Demo',
               theme: ThemeData(
-                primarySwatch: Colors.blue,
+                primarySwatch: AppColors.primarySwatch,
               ),
               home: SplashView(),
          )

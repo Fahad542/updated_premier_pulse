@@ -330,9 +330,7 @@ class empcode
       String newdesignation,
       String newusername,
       String newpassword,
-      String newdepth,
-      //String reportedto
-      )
+      String newdepth)
   {
     auth = newAuth;
     name = newName;
@@ -340,7 +338,7 @@ class empcode
     username =newusername;
     password =newpassword;
     depth=newdepth;
-    //reportedto = reportedto;
+
   }
 
 }

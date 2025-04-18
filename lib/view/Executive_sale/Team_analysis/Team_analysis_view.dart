@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mvvm/res/color.dart';
 import 'package:mvvm/view/Executive_sale/Team_analysis/progress.dart';
+import 'package:mvvm/view/Executive_sale/Team_analysis/searchable_list.dart';
 import 'package:mvvm/view/Login_screen/login_view.dart';
 import 'package:share/share.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
@@ -2855,28 +2856,39 @@ class Team_analysis extends StatefulWidget {
   List<String> options = ["All",'Centeral', 'North', 'South', 'Karachi'];
   var lastSelectedEmpCode;
   List<UserDetails>  employeeList=[];
+  List<UserDetails> heirarchy = [];     // filtered list (for UI)
+  List<UserDetails> originalList = [];  // full list (used for filtering)
+  List<UserDetails> filterlist = [];
   List<UserDetails>  depthList=[];
   bool eco=false;
+  TextEditingController searchcontroller = TextEditingController();
   @override
 
-  void initState(){
+  void initState()
+  {
     load(empcode.auth);
     getsales(empcode.auth,empcode.designation);
     totalsale="0";
-    setState(() {
+    setState( () {
       startDateFormatted = DateFormat('yyyy,MM,dd').format(startDate!);
       endDateFormatted = DateFormat('yyyy,MM,dd').format(endDate!);
       formattedStartDate = startDateFormatted!;  // Assign to formatted variable
       formattedEndDate = endDateFormatted!;      // Assign to formatted variable
       print("date ${startDateFormatted}");
-    });
+    } );
     final repository = measure_repository();
     repository.getAllMeasures();
     super.initState();
     teamcompany();
     branchcompany();
-  }
+    fetchheirarchy();
 
+  }
+  @override
+  void dispose() {
+    searchcontroller.dispose(); // Clean up the controller when the widget is disposed
+    super.dispose();
+  }
 
 
   Widget buildUserTile(UserDetails user) {
@@ -3190,6 +3202,38 @@ class Team_analysis extends StatefulWidget {
 
   }
 
+
+  void fetchheirarchy() async {
+    await salesViewModel.initializeDatabase();
+    originalList = await salesViewModel.fetchallheirarchy(); // store full list
+    setState(() {
+      heirarchy = originalList;  // initialize display list
+      filterlist = originalList;
+    });
+  }
+
+  void filter(String query) {
+
+    if (query.isEmpty) {
+      setState(() {
+        filterlist = originalList; // full data
+      });
+      return;
+    }
+
+    final filtered = originalList.where((item) {
+      return item.empName.toLowerCase().contains(query.toLowerCase()) ||
+          item.empCode.toLowerCase().contains(query.toLowerCase()) ||
+          item.designation.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      filterlist = filtered;
+    });
+  }
+
+
+
   Future<void> getsales(String empcode, String designstion) async {
     setState(() {
       totalsale='0';
@@ -3357,7 +3401,7 @@ class Team_analysis extends StatefulWidget {
 
             ),
           ),
-if(nonpro==false)
+ if(nonpro==false)
           Expanded(
             flex: 5,
             child: Text(
@@ -4039,6 +4083,241 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
               ],
             ),
             drawer: CustomDrawer(),
+
+            floatingActionButton:
+
+            Visibility(
+              visible: !isloading,
+              child: InkWell(
+                onTap: ()  {
+
+
+                  showModalBottomSheet(
+                    context: context,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+                    ),
+                    backgroundColor: Colors.white,
+
+                    isScrollControlled: true, // agar content zyada ho to scroll ho sake
+                    builder: (BuildContext context) {
+                  return
+                  StatefulBuilder(
+                  builder: (BuildContext context, setState) {
+                  return
+                  SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.85,
+                  child:
+                  Padding(
+                  padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  ),
+                  child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  // Text("Search something", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Container(
+                  decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                  BoxShadow(
+                  color: AppColors.primary.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 6,
+                  offset: Offset(0, 3),
+                  ),
+                  ],
+                  ),
+                  child: TextField(
+                  decoration: InputDecoration(
+                  hintText: "Type here...",
+                  prefixIcon: Icon(Icons.search, size: 20,),
+                  isDense: true, // Yeh line text ko vertically center karta hai
+                  contentPadding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0), // Thoda zyada vertical padding
+                  border: InputBorder.none,
+                  ),
+                  onChanged: (value){
+                  setState(() {
+                  filter(value);
+                  });
+                  },
+                  ),
+
+
+                  ),
+
+
+                  SizedBox(height: 20),
+                  Expanded(
+                  child: ListView.builder(
+                    physics: BouncingScrollPhysics(),
+                  itemCount: filterlist.length,
+                  padding: EdgeInsets.all(12),
+                  itemBuilder: (context, index) {
+                  var data = filterlist[index];
+
+                  return
+                    InkWell(
+                      onTap: (){
+                        setState(() {
+                         rootlist.clear();
+                          rootlist.add(
+                            UserDetails(
+                              empCode: data.empCode,
+                              empName: data.empName,
+                              reportingTo: data.reportingTo,
+                              designation: data.designation,
+                              isCheck: data.isCheck,
+                            ),
+                          );
+                          Navigator.pop(context);
+                          // }
+
+
+                          rootlist = rootlist.toSet().toList();
+                          showsales = true;
+                          filterlist = originalList;
+                          getsales(data.empCode, data.designation);
+                          Future.delayed(Duration(seconds: 2), () {
+                            getdsftarget(salesid, formattedStartDate, formattedEndDate);
+                          });
+
+                          data.reports = salesViewModel.select(data.empCode, '0');
+                        });
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                      BoxShadow(
+                      color: AppColors.primary.withOpacity(0.09),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                      ),
+                   ] ),
+                        child: Row(
+                          children: [
+
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${data.empName.split("||")[0]} (${data.empCode})",
+                                    style:TextStyle(
+                                      color:
+                                           AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+
+
+                                  if(data.empName !="Untagged")
+                                    Row(
+                                      children: [
+                                        Text(data.empName.split("||")[1]),
+                                        Text(", "),
+                                        Text(data.empName.split("||")[2]),
+                                      ],
+                                    ),
+                                  Text(data.designation)
+                                ],
+                              ),
+                            ),
+                            //if(data.isCheck == false)
+
+                                Image.asset("assets/growth.png", height: 20, width: 20, color: AppColors.primary),
+
+                          ],
+                        ),
+                      ),
+                    );
+   //                InkWell(
+   //                  onTap: () async {
+   //
+   //                    Navigator.pop(context);
+   //                    getsales(data.empCode, data.designation);
+   //  setState(() {
+   // showsales =true;
+   //  });
+   //
+   //
+   //                    rootlist.add(UserDetails(empCode: data.empCode, empName: data.empName, reportingTo: data.reportingTo, designation: data.designation));
+   //
+   //                  },
+   //                child: Container(
+   //                margin: EdgeInsets.only(bottom: 12),
+   //                padding: EdgeInsets.all(12),
+   //                decoration: BoxDecoration(
+   //                color: Colors.white,
+   //                borderRadius: BorderRadius.circular(16),
+   //                boxShadow: [
+   //                BoxShadow(
+   //                color: Colors.black.withOpacity(0.05),
+   //                blurRadius: 8,
+   //                offset: Offset(0, 3),
+   //                ),
+   //                ],
+   //                ),
+   //                child: Column(
+   //                crossAxisAlignment: CrossAxisAlignment.start,
+   //                children: [
+   //                Row(
+   //                // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+   //                children: [
+   //                Text(
+   //                data.empName,
+   //                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+   //                ),
+   //                Text(
+   //                data.empCode,
+   //                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+   //                ),
+   //                ],
+   //                ),
+   //                SizedBox(height: 4),
+   //                Text(
+   //                data.designation,
+   //                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+   //                ),
+   //                ],
+   //                ),
+   //                ),
+   //              );
+                  },
+                  ),
+                  )
+
+
+                  ],
+                  ),
+                  ));
+                  },
+                  );
+                  } );},
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.search, color: Colors.white),
+                ),
+              ),
+            ),
+
             body:
 
 
@@ -4054,7 +4333,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
 
                     Container(
-                    height: 285,
+                    height: 230,
                     decoration: BoxDecoration(
                       color: AppColors.greencolor,
                     ),
@@ -4064,7 +4343,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
 
                           Container(
-                            height: 260,
+                            height: 230,
                             child: SfRadialGauge(
                               enableLoadingAnimation: true,
                               axes: <RadialAxis>[
@@ -4093,27 +4372,31 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   annotations: <GaugeAnnotation>[
                                     // Achievement annotation
                                     GaugeAnnotation(
-                                      widget: RichText(
-                                        textAlign: TextAlign.center,
-                                        text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Achievement \n",
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.normal,
-                                                color: Colors.white,
+                                      widget:
+                                      Padding(
+                                        padding:  EdgeInsets.all(8.0),
+                                        child: RichText(
+                                          textAlign: TextAlign.center,
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: "Achievement \n",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.normal,
+                                                  color: Colors.white,
+                                                ),
                                               ),
-                                            ),
-                                            TextSpan(
-                                              text: "${totalsale} RS",
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[100],
+                                              TextSpan(
+                                                text: " ${totalsale} RS ",
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.blue[100],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                       positionFactor: 0.02, // Reduced positionFactor for better centering
@@ -4121,28 +4404,61 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     ),
                                     // Target annotation
                                     GaugeAnnotation(
-                                      widget: RichText(
-                                        textAlign: TextAlign.center,
-                                        text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Target \n",
-                                              style: TextStyle(
-                                                fontSize: 8,
-                                                fontWeight: FontWeight.normal,
-                                                color: Colors.white,
-                                              ),
+                                      widget: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+
+
+                                          RichText(
+                                            textAlign: TextAlign.center,
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: "Last day load value \n",
+                                                  style: TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight: FontWeight.normal,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: "${loadvalue}",
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+
+                                              ],
                                             ),
-                                            TextSpan(
-                                              text: "${dsftarget} RS",
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
+                                          ),
+                                          SizedBox(width: 15,),
+                                          RichText(
+                                            textAlign: TextAlign.center,
+                                            text: TextSpan(
+                                              children: [
+                                                TextSpan(
+                                                  text: "Target \n",
+                                                  style: TextStyle(
+                                                    fontSize: 8,
+                                                    fontWeight: FontWeight.normal,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: "${dsftarget}",
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                       positionFactor: 0.65, // Reduced positionFactor for better placement
                                       angle: 30,
@@ -4315,6 +4631,8 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     ),
                                   ),
 
+
+
                                   SizedBox(height: 16),
 
 
@@ -4330,6 +4648,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     Expanded(
                                         child:
                                         ListView.builder(
+                                            physics: BouncingScrollPhysics(),
                                             itemCount: employeeList.length,
                                             itemBuilder: (BuildContext context, index)
 
@@ -4357,7 +4676,8 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                       //depthList.clear();
                                                     }
                                                     setState(
-                                                            () {
+                                                            (){
+
                                                           }   );
                                                   },
                                                   child:
@@ -4459,7 +4779,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       customCardWidget: (Map<String,dynamic> datas, Map<String,dynamic> dsf) {
 
                                         double salesInc = double.parse(datas['Sales_Inc_ST'].replaceAll(",", ""));
-                                        double achieve = (salesInc * 100) / datas['DSFTarget_Value'];
+                                        //double achieve = (salesInc * 100) / datas['DSFTarget_Value'];
                                         //var data =dsftargetlist[datas].DSFTarget_Value;
 
 
@@ -4532,51 +4852,65 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 ])))
                       ]),
 
-                  Positioned(
-
-                      top: 195,
-                      right: 0,
-                      left: 0,
-                      child:
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                         crossAxisAlignment: CrossAxisAlignment.center,
-                         children: [
-
-                           Container(
-                           width:170,
-                             padding: EdgeInsets.all(8),
-                             decoration: BoxDecoration(
-                                 borderRadius: BorderRadius.circular(10),
-                                 color: Colors.blue[100]
-                             ),
-                             child: Center(child:
-                             Column(children:
-                             [
-
-                               Text("Last day load value",
-                                 style: TextStyle(
-                                   fontSize: 11,
-                                   fontWeight: FontWeight.normal,
-                                   color: AppColors.greencolor,
-                                 ),),
-                               SizedBox( height: 3 ),
-                               Text("${loadvalue} RS", style: TextStyle(
-                                 fontSize: 15,
-                                 fontWeight: FontWeight.bold,
-                                 color: AppColors.greencolor,
-                               )),
-
-                             ]  )
-
-                             ),
-                           ),
-
-                     ]
-                     )
-                  ),
+                  // Positioned(
+                  //
+                  //     top: 135,
+                  //     right: 100,
+                  //     left: 0,
+                  //     child: Column(children: [
+                  //       Text("Last day load value",
+                  //         style: TextStyle(
+                  //           fontSize: 8,
+                  //           fontWeight: FontWeight.normal,
+                  //           color: Colors.white,
+                  //         ),),
+                  //       SizedBox( height: 1 ),
+                  //       Text("${loadvalue} RS", style: TextStyle(
+                  //         fontSize: 10,
+                  //         fontWeight: FontWeight.w700,
+                  //         color: Colors.white,
+                  //       )),
+                  //     ],)
+                  //
+                  //    //  Row(
+                  //    //   mainAxisAlignment: MainAxisAlignment.center,
+                  //    //     crossAxisAlignment: CrossAxisAlignment.center,
+                  //    //     children: [
+                  //    //
+                  //    //       Container(
+                  //    //       width:110,
+                  //    //         padding: EdgeInsets.all(8),
+                  //    //         decoration: BoxDecoration(
+                  //    //             borderRadius: BorderRadius.circular(10),
+                  //    //             color: Colors.blue[100]
+                  //    //         ),
+                  //    //         child: Center(child:
+                  //    //         Column(children:
+                  //    //         [
+                  //    //
+                  //    //           Text("Last day load value",
+                  //    //             style: TextStyle(
+                  //    //               fontSize: 11,
+                  //    //               fontWeight: FontWeight.normal,
+                  //    //               color: AppColors.greencolor,
+                  //    //             ),),
+                  //    //           SizedBox( height: 3 ),
+                  //    //           Text("${loadvalue} RS", style: TextStyle(
+                  //    //             fontSize: 15,
+                  //    //             fontWeight: FontWeight.bold,
+                  //    //             color: AppColors.greencolor,
+                  //    //           )),
+                  //    //
+                  //    //         ]  )
+                  //    //
+                  //    //         ),
+                  //    //       ),
+                  //    //
+                  //    // ]
+                  //    // )
+                  // ),
                   Positioned (
-                        top: 255,
+                        top: 195,
                         right: 0,
                         left: 0,
                         child:

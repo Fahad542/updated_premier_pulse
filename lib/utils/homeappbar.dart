@@ -29,26 +29,30 @@ class GeneralAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      centerTitle: true,
       title: Text(title,style: TextStyle(fontWeight: FontWeight.bold, fontFamily:
       "MeriendaBold",)),
       backgroundColor: AppColors.greencolor,
       leading: IconButton(
-        icon: Container(
-          height: 40,
-          width: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5), // Black color with 50% opacity
-                spreadRadius: 1, // Spread radius
-                blurRadius: 2, // Blur radius
-                offset: Offset(0, 3), // Offset in x and y direction
-              ),
-            ],
-          ),
-          child: InkWell(
+        icon:
+        // Container(
+        //   height: 40,
+        //   width: 40,
+        //   decoration: BoxDecoration(
+        //     color: Colors.white,
+        //     borderRadius: BorderRadius.circular(10),
+        //     boxShadow: [
+        //       BoxShadow(
+        //         color: Colors.black.withOpacity(0.5), // Black color with 50% opacity
+        //         spreadRadius: 1, // Spread radius
+        //         blurRadius: 2, // Blur radius
+        //         offset: Offset(0, 3), // Offset in x and y direction
+        //       ),
+        //     ],
+        //   ),
+
+
+          InkWell(
             onTap: () {
 
 
@@ -58,10 +62,10 @@ class GeneralAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: Icon(
               Icons.menu,
               size: 25,
-              color: AppColors.greencolor,
+              color: AppColors.white,
             ),
           ),
-        ),
+
 
 
 

@@ -251,7 +251,7 @@ class _AnimatedCustomExpansionTileState extends State<AnimatedCustomExpansionTil
           ),
         ),
         AnimatedSize(
-          vsync: this,
+          //vsync: this,
           duration: Duration(milliseconds: 300),
           child: Container(
             height: isExpanded ? null : 0,

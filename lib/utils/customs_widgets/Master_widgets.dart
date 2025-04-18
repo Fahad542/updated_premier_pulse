@@ -219,9 +219,7 @@ class _HeirarchyCardState extends State<HeirarchyCard> {
                                     Row(
                                         children: [
 
-                                          InkWell(
-                                            onTap: widget.kpionTap,
-                                            child: Container(
+                                           Container(
                                               padding: EdgeInsets.all(6.0),
                                               decoration: BoxDecoration(
                                                 gradient: LinearGradient(
@@ -243,7 +241,7 @@ class _HeirarchyCardState extends State<HeirarchyCard> {
                                                 ),
                                               ),
                                             ),
-                                          ),
+
                                         ],
                                       ),
                                   ],
@@ -467,7 +465,7 @@ Padding(
 
         if (widget.designation == "DSF" && widget.showsale == true)
           Positioned(
-          right: 60,
+          right: 70,
             left: 2,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -920,9 +918,6 @@ class _SalesListViewState extends State<SalesListView> {
       double sales = double.tryParse(salesStr) ?? 0;
       return sales > 0;
     }).toList();
-
-    // Format the sales value for the list with zeros
-
   }
 
   @override
@@ -935,7 +930,7 @@ class _SalesListViewState extends State<SalesListView> {
         itemCount: sortedApiResponseList.length,
         itemBuilder: (BuildContext context, int index) {
           var data = sortedApiResponseList[index];
-          var dsf = widget.dsftargetlist![index];
+          //var dsf = widget.dsftargetlist![index];
           return widget.customCardWidget(data); // Using the custom card widget passed in
         },
       )
@@ -945,7 +940,7 @@ class _SalesListViewState extends State<SalesListView> {
         itemCount: sortedApiResponseListWithoutZeros.length,
         itemBuilder: (BuildContext context, int index) {
           var data = sortedApiResponseListWithoutZeros[index];
-          var dsf = widget.dsftargetlist![index];
+          //var dsf = widget.dsftargetlist![index];
           return widget.customCardWidget(data); // Using the custom card widget passed in
         },
       )
@@ -1464,7 +1459,7 @@ class _DateContainerState extends State<DateContainer> {
               return Theme(
                 data: ThemeData.light().copyWith(
                   primaryColor: AppColors.greencolor, // Set your desired color here
-                  accentColor: Colors.green,
+                  //accentColor: Colors.green,
                   colorScheme: ColorScheme.light(primary: AppColors.greencolor ?? Colors.green),
                   buttonTheme: ButtonThemeData(
                       textTheme: ButtonTextTheme.primary),

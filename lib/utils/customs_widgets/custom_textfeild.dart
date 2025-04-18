@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
-  final FocusNode focusNode;
+  final FocusNode? focusNode;
   final String hintText;
   final String labelText;
-  final IconData prefixIcon;
-  final Widget suffixIcon; // Change the type to Widget
+  final IconData? prefixIcon;
+  final Widget? suffixIcon; // Change the type to Widget
   final ValueChanged<String>? onChanged;
 
   CustomTextField({
     required this.controller,
-    required this.focusNode,
+     this.focusNode,
     required this.hintText,
     required this.labelText,
-    required this.prefixIcon,
-    required this.suffixIcon,
+     this.prefixIcon,
+     this.suffixIcon,
     this.onChanged,
   });
 

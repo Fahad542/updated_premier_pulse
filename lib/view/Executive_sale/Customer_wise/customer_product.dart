@@ -1,22 +1,16 @@
-
-
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../../../respository/company_product_repository.dart';
-import '../../../respository/customer_company_repositiry.dart';
 import '../../../utils/customs_widgets/Shimmer_effect.dart';
 import '../../../utils/utils.dart';
-
 import 'package:mvvm/res/color.dart';
-import 'package:mvvm/respository/customer_wise_repository.dart';
 import 'package:mvvm/utils/customs_widgets/Custom_app_bar.dart';
-
 import 'package:share/share.dart';
 import '../../../utils/customs_widgets/Master_widgets.dart';
 import '../../../utils/customs_widgets/Popup_menu.dart';
+
+
 
 enum SortOptions { Select, byAscendingName, byDecendingName, byMaximumSale, byMinimumSale }
 class CustomerProductWise extends StatefulWidget {
@@ -54,21 +48,18 @@ bool ischeck=false;
 DateTime? Start;
 double totalSales = 0.0;
 DateTime? End;
-List<String> measuresList=[];
+List<String> measuresList = [];
 String formattedStartDate='';
 String formattedEndDate='';
 
 
-var storedata; // Initialize the list
+var storedata;
 
 class _CustomerWiseState extends State<CustomerProductWise> {
 
   String sale = '';
   SortOptions selectedSortOption = SortOptions.Select;
   var  originalStoredata ;
-
-
-
   var customerDataFuture;
   var storedata;
   var store;
@@ -82,6 +73,8 @@ class _CustomerWiseState extends State<CustomerProductWise> {
   String? totalsale;
   int totals=0;
   final formatter = NumberFormat('#,###');
+
+
   @override
   void initState() {
     super.initState();

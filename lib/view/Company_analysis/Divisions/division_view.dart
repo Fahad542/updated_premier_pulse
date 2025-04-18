@@ -82,7 +82,7 @@ class _DivisionState extends State<division> {
           value: sales,
           title: "${data['Product_Class_Name']} \n${percentage.toStringAsFixed(2)}%",
           radius: 50,
-          titleStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+          titleStyle: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white),
         );
       }).toList();
 
@@ -245,7 +245,7 @@ class _DivisionState extends State<division> {
                         PieChartData(
                           sections: pieSections,
                           centerSpaceRadius: 80, // Adjust the center space radius if needed
-                          sectionsSpace: 2,
+                          sectionsSpace: 4,
                         ),
                       ),
                     ),
@@ -372,7 +372,7 @@ class _DivisionState extends State<division> {
                               "Total Sales",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 15, // Default size
+                                fontSize: 13, // Default size
 
 
                               ),
@@ -382,7 +382,7 @@ class _DivisionState extends State<division> {
                               totalSale,
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 20, // Default size
+                                fontSize: 17, // Default size
 fontWeight: FontWeight.bold,
 
                               ),
