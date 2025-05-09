@@ -44,6 +44,8 @@ dev_dependencies:
     sdk: flutter
   flutter_launcher_icons:
 
+
+
 flutter_icons:
   android: true
   ios: true
