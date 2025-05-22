@@ -20,6 +20,7 @@ class HeirarchyCard extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback saleonTap;
    VoidCallback? kpionTap;
+  VoidCallback? attendanceontap;
   VoidCallback? route;
   VoidCallback? getchannels;
   VoidCallback? getbranches;
@@ -41,6 +42,7 @@ class HeirarchyCard extends StatefulWidget {
     this.lat,
     this.long,
     this.kpionTap,
+    this.attendanceontap,
     this.route,
     required this.title,
     required this.date,
@@ -460,7 +462,26 @@ Padding(
               ],
             ),
           ),
+        if (widget.designation == "DSF" && widget.showsale == true)
+          Positioned(
+            top: 75,
+            right: 5,
+            left: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
 
+                InkWell(
+                  onTap: widget.attendanceontap,
+                  child: Container(
+                    padding: EdgeInsets.all(0.0),
+
+                    child: Image.asset("assets/attendance.png", height: 25,width: 25,)
+                  ),
+                ),
+              ],
+            ),
+          ),
 
 
         if (widget.designation == "DSF" && widget.showsale == true)

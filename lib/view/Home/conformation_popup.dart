@@ -3,13 +3,14 @@ import 'package:mvvm/utils/app_colors.dart';
 import 'package:mvvm/view/Login_screen/login_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Local_database/db.dart';
 import '../../respository/measure_repository.dart';
 import '../../utils/Drawer.dart';
 import '../Splash_screen/user_view_model.dart';
 
 Future<void> showLogoutConfirmationDialog(BuildContext context) async {
   final userPrefernece = Provider.of<UserViewModel>(context, listen: false);
-  await salesViewModel.initializeDatabase();
+  await LocalDatabase.initializeDatabase();
   final repository = measure_repository();
   return showDialog<void>(
     context: context,
@@ -71,8 +72,7 @@ Future<void> showLogoutConfirmationDialog(BuildContext context) async {
                       String empCode = prefs.getString('emp_code') ?? '';
                       String empName = prefs.getString('emp_name') ?? '';
                       String des = prefs.getString('emp_designation') ?? '';
-                     await  salesViewModel.deletetable();
-                     await repository.clearMeasures();
+                     await  LocalDatabase.deletetable();
                       if (empCode.isNotEmpty && empName.isNotEmpty) {
                         prefs.clear();
                       }

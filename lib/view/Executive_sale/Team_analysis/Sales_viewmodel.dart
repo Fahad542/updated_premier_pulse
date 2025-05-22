@@ -1,616 +1,524 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mvvm/model/branch_model.dart';
-import 'package:mvvm/model/company_execution_model.dart';
-import 'package:mvvm/model/customer_wise_model.dart';
+import 'package:mvvm/Local_database/db.dart';
 import 'package:mvvm/res/color.dart';
-import 'package:mvvm/respository/branch_repository.dart';
-import 'package:mvvm/respository/company_execution_repository.dart';
-import 'package:mvvm/respository/heirarchy%20repository.dart';
+import 'package:mvvm/respository/Attendance_repository.dart';
 import 'package:mvvm/view/Executive_sale/Company_wise/Company_wise.dart';
 import 'package:mvvm/view/Executive_sale/Customer_wise/customer_wise.dart';
-import 'package:mvvm/view/Login_screen/login_view.dart';
-import '../../../data/response/api_response.dart';
-import '../../../model/heirarchy_model.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import '../../../model/Getemployees_model.dart';
 import '../../../model/team_company.dart';
+import '../../../respository/Erp_employees.dart';
 
 
 class SalesHeirarchyViewModel with ChangeNotifier {
-  bool _dataFetched = false;
-  List<Customer> customerList = [];
-  List<UserDetails> user = [];
-  List<company_execution_model> team = [];
-  List<Team_compnay> company = [];
-  String reporting = '${empcode.auth}';
-  final _salesRepo = HeirarchyRepository();
-  final teamcom = company_execution_Repository();
-  final branchcom = branch_Repository();
+  List<String> items = [
+    'Item 1',
+    'Item 2',
+    'Item 3',
+    'Item 4',
+    'Item 5',
+    'Item 6'
 
-  ApiResponse<List<UserDetails>> heirarchyList = ApiResponse.loading();
-  ApiResponse<List<company_execution_model>> teamcomapny = ApiResponse.loading();
-  ApiResponse<List<Branch_compnay>> branch = ApiResponse.loading();
+  ];
 
-  void setHeirarcyList(ApiResponse<List<UserDetails>> response) {
-    heirarchyList = response;
-    notifyListeners();
+  List<bool> selectedItems = List.generate(6, (index) => false);
+  List<bool> selectedItem = List.generate(6, (index) => false);
+  List<String> selectedToAdd = [];
+  List<String> selectedbranch = [];
+  List<String> filteredItembranch = [];
+  bool selectal = false;
+  List<String> selectedToAd = [];
+  List<String> filteredItem = [];
+  List<String> filteredItems = [];
+  List<ErpEmployee> erpemployee=[];
+  TextEditingController erp_Employee_controller=TextEditingController();
+  int selectedTabIndex = 0;
+  final attendance = AttendanceRepo();
+  final erp =GetErpEmployeesRepo();
+  Map<String, dynamic> today_attendance={};
+  bool selectall = false;
+  TextEditingController _textEditing = TextEditingController();
+  TextEditingController _textEditingbranch = TextEditingController();
+  void refreshSelectedToAddcompany() {
+    selectedToAd = [];
   }
 
-  void teamcomapnyList(ApiResponse<List<company_execution_model>> response) {
-    teamcomapny = response;
+  Future<void> userattendance(String code) async  {
+    today_attendance = await attendance.fectdata(code);
+    print("Attendance: ${today_attendance}");
     notifyListeners();
   }
+  Future<void> dsfuserattendance(String code) async {
+    try {
+      today_attendance = await attendance.dsf_attendance(code); // This is expected to be a Map
+      print("Attendance: $today_attendance");
 
-  void branchList(ApiResponse<List<Branch_compnay>> response) {
-    branch = response;
-    notifyListeners();
+      // Optional: Handle specific response cases
+      if (today_attendance['status'] == '404') {
+        print("No attendance found for code $code");
+        // You can notify UI or set a state flag here if needed
+      }
+
+      notifyListeners();
+    } catch (e, stackTrace) {
+      print("Error in dsfuserattendance: $e");
+      print("Stack trace: $stackTrace");
+
+      // Optional: You can also log this or show a snackbar/dialog in the UI
+    }
   }
 
 
-  late Database _database;
+  void attendancesheet(BuildContext context, String code) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return FutureBuilder(
+          future: userattendance(code), // Call your method here
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                height: 130,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            } else if (snapshot.hasError) {
+              return Container(
+                height: 200,
+                child: Center(child: Text('Error loading attendance')),
+              );
+            } else {
+              // Assume `today_attendance` holds the time string like '09:00 AM'
+              String attendanceTime = today_attendance['checkIn'] ?? 'N/A';
 
-  Future<void> initializeDatabase() async
-  {
-    _database = await openDatabase(
-      join(await getDatabasesPath(), 'user_details9_database.db'),
-      onCreate: (db, version)
-       {
-        db.execute('CREATE TABLE user_details(EmpDesignation TEXT, EmpCode TEXT PRIMARY KEY, EmpName TEXT, ReportTo TEXT, is_check INTEGER, Depth INTEGER)', );
-        db.execute('CREATE TABLE team_company(Product_Company_Name TEXT, Product_Company_ID TEXT, is_check INTEGER)',);
-        db.execute('CREATE TABLE branch(Branch_Branch_Report_Name TEXT, Branch_Branch_Code TEXT, is_check INTEGER )',);
-        db.execute('CREATE TABLE codes(Branch_Branch_Report_Name TEXT, Branch_Branch_Code TEXT, is_check INTEGER )',);
-        db.execute('CREATE TABLE IF NOT EXISTS selected_items(id INTEGER PRIMARY KEY, item TEXT)',);
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                height: 190,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 50,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Attendance',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: EdgeInsets.all(10),
+                          child: Image.asset(
+                            "assets/attendance.png",
+                            color: AppColors.primary,
+                            height: 34,
+                            width: 34,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Today attendance time:',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.greencolor,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              attendanceTime,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.greencolor,
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        );
       },
-      version: 1,
     );
   }
 
-  void updateIsCheckValue(String id, bool newValue)
-  async {
-    final Database db = await _database;
-    await db.rawUpdate('UPDATE team_company SET is_check = ? WHERE Product_Company_ID = ?', [newValue ? 1 : 0, id],);
-  }
-
-  void updateIsCheckValuebranch(String id, bool newValue) async
-  {
-    final Database db = await _database;
-    await db.rawUpdate('UPDATE branch SET is_check = ? WHERE Branch_Branch_Code = ?', [newValue ? 1 : 0, id],);
-  }
-
-  void updateCheck(bool newValue) async
-  {
-    final Database db = await _database;
-    await db.rawUpdate('UPDATE team_company SET is_check = ?', [newValue ? 1 : 0],);
-  }
-
-  void updateCheckbranch(bool newValue) async
-  {
-    final Database db = await _database;
-    await db.rawUpdate('UPDATE branch SET is_check = ?', [newValue ? 1 : 0],);
-  }
-
-  Future<List<Map<String, dynamic>>> getCheckboxes() async
-  {
-    final Database db = await _database;
-    final List<Map<String, dynamic>> checkboxes = await db.rawQuery('SELECT * FROM team_company');
-    return checkboxes;
-  }
-
-  Future<List<String>> name() async
-  {
-    final Database db = await _database;
-    List<Map<String, dynamic>> result = await db.rawQuery('SELECT Product_Company_Name FROM team_company WHERE is_check = 1',);
-    List<String> companyNames = result.map((e) => e['Product_Company_Name'] as String).toList();
-    return companyNames;
-  }
-
-  Future<void> deletetable() async
-  {
-    await _database.delete('user_details');
-    await _database.delete('team_company');
-    await _database.delete('branch');
-    await _database.delete('codes');
-  }
-
-  Future<void> deletecompanytable() async
-  {
-    await _database.delete('team_company');
-  }
-
-  Future<void> saveItems(List<String> items) async
-  {
-    final Database db = await _database;
-    await db.transaction((txn) async {
-      for (String item in items) {
-        await txn.rawInsert('INSERT INTO selected_items(item) VALUES(?)', [item],);
-      }
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> searchItems(TextEditingController searchTexts) async
-  {
-    final Database db = await _database;
-    final String searchText = searchTexts.text;
-    try {
-      List<Map<String, dynamic>> result = await db.rawQuery('SELECT * FROM team_company WHERE Product_Company_Name LIKE ?', ['%$searchText%']);
-      print(result);
-      return result;
-    } catch (e) {
-      print('Error searching items: $e');
-      return [];
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> searchbranch(TextEditingController searchTexts) async {
-    final Database db = await _database;
-    final String searchText = searchTexts.text;
-
-    try {
-      List<Map<String, dynamic>> result = await db.rawQuery('SELECT * FROM branch WHERE Branch_Branch_Report_Name LIKE ?', ['%$searchText%']);
-         print(result);
-      return result;
-    } catch (e)
-
-    {
-      print('Error searching items: $e');
-      return [];
-    }
-  }
 
 
-  Future<void> printUserDetailsFromDatabase(String reportingToValue,
-      String reporting_to) async {
-    final userDetailsList = await select(reportingToValue, reporting_to);
+  void dsfattendancesheet(BuildContext context, String code) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return FutureBuilder(
+          future: dsfuserattendance(code), // Call your method here
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                height: 130,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            } else if (snapshot.hasError) {
+              return Container(
+                height: 200,
+                child: Center(child: Text('Error loading attendance')),
+              );
+            } else {
+              // Assume `today_attendance` holds the time string like '09:00 AM'
+              String attendanceTime = today_attendance['attendance_time'] ?? 'N/A';
+              String dayend = today_attendance['dayend_time'] ?? 'N/A';
+              return Container(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                height: 190,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 50,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Attendance',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: EdgeInsets.all(10),
+                          child: Image.asset(
+                            "assets/attendance.png",
+                            color: AppColors.primary,
+                            height: 34,
+                            width: 34,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Today attendance time:',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.greencolor,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                             Text(
+                                "Attendance Time: ${attendanceTime}\nDayend Time: ${dayend} ",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.greencolor,
+                                ),
+                              ),
 
-    for (var userDetails in userDetailsList) {
-      print('------------');
-      print('Emp Code: ${userDetails.empCode}');
-      print('Emp Name: ${userDetails.empName}');
-      print('Reporting To: ${userDetails.reportingTo}');
-      print('Designation: ${userDetails.designation}');
-      print('Is Check: ${userDetails.isCheck}');
-      print('------------');
-    }
-
-  }
-
-  Future<void> printtableFromDatabase() async {
-    final userDetailsList = await fetchdata();
-    for (var userDetails in userDetailsList) {
-      print('Company Name: ${userDetails.companyName}');
-      print('Company ID: ${userDetails.companyID}');
-
-    }
-  }
-
-  Future<bool> isDatabaseTableEmpty() async {
-    final List<Map<String, dynamic>> result = await _database.rawQuery('SELECT COUNT(*) as count FROM user_details');
-    final int? count = Sqflite.firstIntValue(result);
-    return count == 0;
-  }
-
-  Future<String> untaggedCode() async {
-    try {
-      final List<Map<String, dynamic>> result = await _database.rawQuery("SELECT EmpCode FROM user_details WHERE EmpName='Untagged'");
-      if (result.isNotEmpty) {
-        String empCodes = result.map((row) => '${row['EmpCode']}').join(', ');
-        return empCodes;
-      } else {
-        return '';
-      }
-    } catch (e) {
-      print('Error: $e');
-      return '';
-    }
-  }
-
-  Future<void> printUntaggedEmpCodes() async {
-    try {
-      String empCodes = await untaggedCode();
-      if (empCodes.isNotEmpty) {
-        print('Employee Codes: $empCodes');
-      } else {
-        print('No records found for "Untagged" EmpName.');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-  Future<void> _saveUserDetailsToLocalDatabase(
-      List<UserDetails> userDetailsList) async {
-
-    await _database.delete('user_details');
-    await _database.insert('user_details',
-      {
-        'EmpCode': empcode.auth,
-        'EmpName': empcode.name,
-        'Depth': empcode.depth,
-        'is_check': 1,
-        'ReportTo': empcode.auth,
-        'EmpDesignation': empcode.designation
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        );
       },
-      conflictAlgorithm: ConflictAlgorithm.replace,
     );
-
-    // Insert new data
-    for (var userDetails in userDetailsList) {
-      await _database.insert(
-        'user_details',
-        userDetails.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    List<Map<String, dynamic>> allUserDetails = await _database.query(
-        'user_details');
-
-
-    for (var userDetails in allUserDetails) {
-      print('EmpCode: ${userDetails['EmpCode']}');
-    }
-    _dataFetched = true;
   }
 
-  Future<void> fetchHeirarchyListApi() async
-  {
-    setHeirarcyList(ApiResponse.loading());
-    try {
-      final List<UserDetails> value = await _salesRepo.fetchUserDetails();
+Future<void> search( String code) async  {
+  erpemployee = await erp.getErpEmployees(code);
+  notifyListeners();
 
-      if (value.isNotEmpty) {
-
-        await _saveUserDetailsToLocalDatabase(value);
-
-
-        setHeirarcyList(ApiResponse.completed(value));
-      }
-      else
-      {
-        setHeirarcyList(ApiResponse.error("User details are empty"));
-      }
-    }
-    catch (error)
-    {
-      setHeirarcyList(ApiResponse.error(error.toString()));
-    }
-  }
-
-  Future<void> _savedranchdetailsToLocalDatabase(
-      List<Branch_compnay> teamcompanyList) async
-  {
-
-    await _database.delete('branch');
-
-
-    for (var team in teamcompanyList) {
-      await _database.insert(
-        'branch',
-        team.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      _dataFetched = true;
-    }
-  }
-
-  Future<List<Branch_compnay>> fetchbranchdata() async {
-    final List<Map<String, dynamic>> maps = await _database.query(
-      'branch',
-      columns: [
-        'Branch_Branch_Report_Name',
-        'Branch_Branch_Code',
-        'is_check'
-      ],
-    );
-
-
-    return List.generate(maps.length, (i) {
-      return Branch_compnay(
-          BranchName: maps[i]['Branch_Branch_Report_Name'],
-          BranchID: int.parse(maps[i]['Branch_Branch_Code']),
-          ischecked: maps[i]['is_check'] == 1
-
-      );
-    });
-  }
-
-
-  Future<List<UserDetails>> search(String empcode) async {
-
-    final List<Map<String, dynamic>> maps = await _database.query(
-      'user_details',
-      columns: [
-        'EmpDesignation',
-        'EmpCode',
-        'Depth',
-        'EmpName',
-        'ReportTo',
-        'is_check'
-      ],
-      where: 'EmpCode = ? ',
-      whereArgs: [empcode],
-      groupBy: 'EmpName',
-    );
-    return
-      List.generate( maps.length, ( i ) {
-
-      return UserDetails(
-        designation: maps[i]['EmpDesignation'],
-        empCode: maps[i]['EmpCode'],
-        Depth: maps[i]['Depth'],
-        empName: maps[i]['EmpName'],
-        reportingTo: maps[i]['ReportTo'],
-        isCheck: maps[i]['is_check'] == 0,
+}
+  void showConfirmationDialog(BuildContext context, String name, String code, String requested_under_name, String requested_under_code) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Tap outside to dismiss disabled
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 16,
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 60,
+                    color: Colors.orange),
+                SizedBox(height: 16),
+                Text(
+                  "Are you sure?",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Do you really want to add ${name} in heirarcy?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                  color: AppColors.primary),
+                ),
+                SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Cancel
+                      },
+                      icon: Icon(Icons.cancel),
+                      label: Text("Cancel"),
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                      ),
+                      onPressed: () {
+                        erp.Send_request(code, name, requested_under_code, requested_under_name);
+                        Navigator.of(context).pop(); // Confirm
+                        // Add your confirm logic here
+                        print("Action confirmed");
+                      },
+                      icon: Icon(Icons.check_circle_outline),
+                      label: Text("Yes, Confirm"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
-      }
+      },
     );
   }
+void get_erp_employees(BuildContext context, String requested_under_name, String requested_under_code)
+{
+  showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      backgroundColor: Colors.white,
+
+      isScrollControlled: true, // agar content zyada ho to scroll ho sake
+      builder: (BuildContext context) {
+        return
+          StatefulBuilder(
+            builder: (BuildContext context, setState) {
+              return
+                SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.85,
+                    child:
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                        top: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Text("Search something", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(12),
+                              // boxShadow: [
+                              // BoxShadow(
+                              // color: AppColors.primary.withOpacity(0.1),
+                              // spreadRadius: 1,
+                              // blurRadius: 6,
+                              // offset: Offset(0, 3),
+                              // ),
+                              // ],
+                            ),
+                            child: TextField(
+                              controller: erp_Employee_controller,
+                              decoration: InputDecoration(
+                                hintText: "Type here...",
+                                prefixIcon: Icon(Icons.search, size: 20,),
+                                isDense: true, // Yeh line text ko vertically center karta hai
+                                contentPadding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0), // Thoda zyada vertical padding
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (value){
+                                setState(() {
+                                  if(value.isNotEmpty) {
+                                    search(value);
+                                  }
+                                  else {
+                                    erpemployee.clear();
+                                  }
+                                });
+                              },
+                            ),
+
+
+                          ),
+
+
+                          SizedBox(height: 20),
+                          erpemployee.isNotEmpty ?
+                          Expanded(
+                            child: ListView.builder(
+                              physics: BouncingScrollPhysics(),
+                              itemCount: erpemployee.length,
+                              padding: EdgeInsets.all(12),
+                              itemBuilder: (context, index) {
+                                var data = erpemployee[index];
+
+                                return
+                                  InkWell(
+                                    onTap: (){
+                                      setState(() {
+
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: EdgeInsets.only(bottom: 12),
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.shade50.withOpacity(0.3),
+                                        borderRadius: BorderRadius.circular(16),
+
+                                      ),
+                                      child: Row(
+                                        children: [
+
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "${data.name} (${data.oldCode})",
+                                                  style:TextStyle(
+                                                    color:
+                                                    AppColors.primary,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                  ),
+
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
 
 
 
-  Future<List<UserDetails>> designations() async {
+                                                Text(data.designation)
+                                              ],
+                                            ),
+                                          ),
+                                          //if(data.isCheck == false)
 
-    List<UserDetails> userDetailsList = [];
-    final List<Map<String, dynamic>> maps = await _database.query(
-      'user_details',
-      columns: ['EmpDesignation', 'EmpCode', 'EmpName', 'Depth', 'ReportTo'],
-      where: 'Depth > ?',
-      whereArgs: [empcode.depth],  // Filtering
-      orderBy: 'Depth ASC',
-      groupBy: 'EmpDesignation',
-    );
-    for (var map in maps) {
-      userDetailsList.add(
-          UserDetails(
-        designation: map['EmpDesignation'],
-        empCode: map['EmpCode'] ?? '',
-        empName: map['EmpName'] ?? '',
-        reportingTo: map['ReportTo'] ?? '',
-        Depth: map['Depth'] ?? '',
-         )
-      );}
-    userDetailsList.removeWhere((element) =>
-    element.designation == "DSF" || element.designation == "SUP");
+                                          InkWell(
+                                              onTap: (){
+                                                showConfirmationDialog(context,data.name,data.oldCode, requested_under_name, requested_under_code);
+                                              },
+                                              child: Image.asset("assets/r.png", height: 50, width: 50, color: AppColors.primary,)),
+
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                              },
+                            ),
+                          ):
+                              Text("No data")
 
 
-    return userDetailsList;
-  }
-
-
-  Future<List<UserDetails>> select_through_depth(String depth) async {
-    print("object");
-    int depthInt = int.parse(depth);
-    int nextDepth = depthInt;
-
-
-    final List<Map<String, dynamic>> maps = await _database.query(
-      'user_details',
-      columns: ['EmpDesignation', 'EmpCode', 'EmpName', 'Depth', 'ReportTo'],
-      where: 'Depth = ?',
-      orderBy: 'Depth ASC',
-      whereArgs: [nextDepth.toString()] );
-
-    List<UserDetails> userDetailsList = [];
-
-
-    for ( var map in maps ) {
-      userDetailsList.add(
-          UserDetails(
-            designation: map['EmpDesignation'],
-            empCode: map['EmpCode'] ?? '',
-            empName: map['EmpName'] ?? '',
-            reportingTo: map['ReportTo'] ?? '',
-            Depth: map['Depth'] ?? '',
-      ));
-    }
-          for (int i=0; i<userDetailsList.length; i++) {
-            print(userDetailsList.length);
-           }
-        return userDetailsList;
-  }
-
-  Future<List<UserDetails>> select(String empcode, String isfirst) async {
-    if (
-    empcode == '99938'
-    ) {
-      if (isfirst == '1')
-      {
-        final List<Map<String, dynamic>> maps = await _database.query(
-          'user_details',
-          columns: [
-            'EmpDesignation',
-            'EmpCode',
-            'EmpName',
-            'Depth',
-            'ReportTo',
-            'is_check'
-          ],
-          where: 'EmpCode = ? ',
-          whereArgs: [ empcode ],
-          groupBy: 'EmpName',
-        );
-
-
-        return List.generate(maps.length, (i) {
-          return UserDetails(
-            designation: maps[i]['EmpDesignation'],
-            empCode: maps[i]['EmpCode'],
-            empName: maps[i][ 'EmpName' ],
-            Depth: maps[i][ 'Depth' ],
-            reportingTo: maps[i]['ReportTo'],
-            isCheck: maps[i]['is_check'] == 0,
+                        ],
+                      ),
+                    ));
+            },
           );
-        });
-      }
-      else
-      {
-
-        final List<Map<String, dynamic>> maps = await _database.query('user_details',
-          columns: [
-            'EmpDesignation',
-            'EmpCode',
-            'EmpName',
-            'Depth',
-            'ReportTo',
-            'is_check'
-          ],
-          where: 'ReportTo = ? AND EmpCode != ReportTo',
-          whereArgs: [ empcode ],
-          groupBy: 'EmpName'
-        );
-
-        return List.generate(maps.length, (i) {
-          return UserDetails(
-            designation: maps[i]['EmpDesignation'],
-            empCode: maps[i]['EmpCode'],
-            empName: maps[i]['EmpName'],
-            Depth: maps[i]['Depth'],
-            reportingTo: maps[i]['ReportTo'],
-            isCheck: maps[i]['is_check'] == 0,
-          );
-        }
-        );
-      }
-    }
-    else {
-      if (isfirst == '1') {
-
-        final List<Map<String, dynamic>> maps = await _database.query(
-          'user_details',
-          columns: [
-            'EmpDesignation',
-            'EmpCode',
-            'EmpName',
-            'Depth',
-            'ReportTo',
-            'is_check'
-          ],
-          where: 'EmpCode = ? ',
-          whereArgs: [empcode],
-        );
-
-
-        return List.generate(maps.length, (i) {
-          return
-            UserDetails(
-            designation: maps[i]['EmpDesignation'],
-            empCode: maps[i]['EmpCode'],
-            empName: maps[i]['EmpName'],
-            Depth: maps[i]['Depth'],
-            reportingTo: maps[i]['ReportTo'],
-            isCheck: maps[i]['is_check'] == 0,
-          );
-        }
-        );
-      }
-
-      else
-      {
-        final List<Map<String, dynamic>> maps = await _database.query(
-          'user_details',
-          columns: [
-            'EmpDesignation',
-            'EmpCode',
-            'EmpName',
-            'Depth',
-            'ReportTo',
-            'is_check'
-          ],
-          where: 'ReportTo = ? AND EmpCode != ReportTo',
-          whereArgs: [empcode],
-        );
-
-
-        return List.generate(maps.length, (i) {
-          return UserDetails(
-            designation: maps[i]['EmpDesignation'],
-            empCode: maps[i]['EmpCode'],
-            empName: maps[i]['EmpName'],
-            Depth: maps[i]['Depth'],
-            reportingTo: maps[i]['ReportTo'],
-            isCheck: maps[i]['is_check'] == 0);});
-      }
-    }
-  }
+      } );
 
 
 
-
-
-
-  Future<List<UserDetails>> selectalls(String empcode, String isfirst) async {
-    List<UserDetails> result = [];
-
-    if (empcode == '99938')
-    {
-      if (isfirst == '1') {
-        await result;
-      } else {
-        await result;
-      }
-    }
-    else {
-      if (isfirst == '1') {
-        final List<Map<String, dynamic>> maps = await _database.query(
-          'user_details',
-          columns: [
-            'EmpDesignation',
-            'EmpCode',
-            'EmpName',
-            'Depth',
-            'ReportTo',
-            'is_check'
-          ],
-          where: 'EmpCode = ?',
-          whereArgs: [empcode],
-        );
-
-        for (var map in maps) {
-          result.add(UserDetails(
-            designation: map['EmpDesignation'],
-            empCode: map['EmpCode'],
-            empName: map['EmpName'],
-            Depth: map['Depth'],
-            reportingTo: map['ReportTo'],
-            isCheck: map['is_check'] == 0,
-          ));
-        }
-
-        await result;
-      } else {
-        await result;
-      }
-    }
-
-    return result;
-  }
-
-
-  Future<List<UserDetails>> fetchallheirarchy() async {
-    try {
-      final List<Map<String, dynamic>> maps = await _database.query(
-        'user_details',
-        where: 'EmpDesignation != ? AND EmpName != ?', // Filter condition
-        whereArgs: ['DSF', 'Untagged'], // Value to exclude
-        orderBy: 'Depth ASC',
-      );
-
-      return List.generate(maps.length, (i) {
-        return UserDetails(
-          designation: maps[i]['EmpDesignation'],
-          empCode: maps[i]['EmpCode'],
-          empName: maps[i]['EmpName'],
-          Depth: maps[i]['Depth'],
-          reportingTo: maps[i]['ReportTo'],
-          isCheck: maps[i]['is_check'] == 0,
-        );
-      });
-    } catch (e) {
-      print("Error: ${e.toString()}");
-      return [];
-    }
-  }
+}
 
 
 
@@ -620,97 +528,9 @@ class SalesHeirarchyViewModel with ChangeNotifier {
 
 
 
-////////////////////////////////////////////team/////////////////////////////
-
-  Future<List<Team_compnay>> fetchdata() async {
-    final List<Map<String, dynamic>> maps = await _database.query(
-      'team_company',
-      columns: [
-        'Product_Company_Name',
-        'Product_Company_ID',
-        'is_check'
-      ],
-    );
-    return List.generate(maps.length, (i) {
-      return Team_compnay(
-          companyID: maps[i]['Product_Company_Name'],
-          companyName: maps[i]['Product_Company_ID'],
-          ischecked: maps[i]['is_check'] == 1
-
-      );
-    });
-  }
-
-  Future<void> _savetabledetailsToLocalDatabase(
-      List<company_execution_model> teamcompanyList) async {
-
-    await _database.delete('team_company');
 
 
-    for (var team in teamcompanyList) {
-      await _database.insert(
-        'team_company',
-        {
-          'Product_Company_ID': team.Compnay_ID,
-          'Product_Company_Name': team.Company,
-          'is_check': team.is_check
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-    }
-    _dataFetched = true;
-  }
-
-  Future<void> fetchTeamCompanyApi() async
-  {
-    teamcomapnyList(ApiResponse.loading());
-
-    try {
-      final List<company_execution_model> value = await teamcom.fetchData();
-
-      if (value.isNotEmpty) {
-
-        await _savetabledetailsToLocalDatabase(value);
-        print('Fetched Team Company Data: $value');
-
-        teamcomapnyList(ApiResponse.completed(value));
-      } else {
-
-        teamcomapnyList(ApiResponse.error("Team company details are empty"));
-      }
-    } catch (error) {
-      teamcomapnyList(ApiResponse.error(error.toString()));
-    }
-  }
-
-  Future<void> fetchbranchapi() async
-  {
-    branchList(ApiResponse.loading());
-
-    try {
-      final List<Branch_compnay> value = await branchcom
-          .team_company_fetchData();
-
-      if (value.isNotEmpty) {
-
-        await _savedranchdetailsToLocalDatabase(value);
-        print('Fetched Branch Company Data: $value');
-
-        branchList(ApiResponse.completed(value));
-      } else {
-
-        branchList(ApiResponse.error("Branchdetails are empty"));
-      }
-    } catch (error) {
-      teamcomapnyList(ApiResponse.error(error.toString()));
-    }
-  }
-
-
-
-
-  void showLoadingDialog(BuildContext context)
-  {
+  void showLoadingDialog(BuildContext context) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -746,23 +566,7 @@ class SalesHeirarchyViewModel with ChangeNotifier {
       },
     );
   }
-
-  List<String> items = [
-    'Item 1',
-    'Item 2',
-    'Item 3',
-    'Item 4',
-    'Item 5',
-    'Item 6'
-
-  ];
-
-  List<bool> selectedItems = List.generate(6, (index) => false);
-  List<bool> selectedItem = List.generate(6, (index) => false);
-  void showCustomerWiseDialog(
-      BuildContext context, String emp_code,
-      String startdate, String enddate, String name, List<int> company,
-      List<int> branch, List<String> measure) {
+  void showCustomerWiseDialog(BuildContext context, String emp_code, String startdate, String enddate, String name, List<int> company, List<int> branch, List<String> measure) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -864,22 +668,11 @@ class SalesHeirarchyViewModel with ChangeNotifier {
       },
     );
   }
-
-
-
-
-  List<String> selectedToAdd = [];
-  List<String> selectedbranch = [];
-  List<String> filteredItembranch = [];
-  bool selectal = false;
-
-  void refreshSelectedToAddbranch()
-  {
+  void refreshSelectedToAddbranch() {
     selectedToAdd = [];
     selectedbranch = [];
   }
-  void showDropdownCheckbox(BuildContext context, List<String> items, List<String> item, List<String> initialSelectedValues, String title, List<bool> check, void Function(List<String> selectedValuese) onDone, void Function() onTapDone,)
-  {
+  void showDropdownCheckbox(BuildContext context, List<String> items, List<String> item, List<String> initialSelectedValues, String title, List<bool> check, void Function(List<String> selectedValuese) onDone, void Function() onTapDone,) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
@@ -934,7 +727,7 @@ class SalesHeirarchyViewModel with ChangeNotifier {
                               if(_textEditing==''){
                                 filteredItembranch = List.from(items);
                               }
-                              searchbranch(_textEditing).then((searchResult) {
+                              LocalDatabase.searchbranch(_textEditing).then((searchResult) {
                                 filteredItembranch = searchResult.map((map) => '${map['Branch_Branch_Report_Name']} - ${map['Branch_Branch_Code']}').toList();
                                 check = searchResult.map((map) => map['is_check'] == 1).toList();
                               });
@@ -970,7 +763,7 @@ class SalesHeirarchyViewModel with ChangeNotifier {
             if(_textEditing==''){
             filteredItembranch = List.from(items);
             }
-            searchbranch(_textEditing).then((searchResult) {
+            LocalDatabase.searchbranch(_textEditing).then((searchResult) {
             filteredItembranch = searchResult.map((map) => '${map['Branch_Branch_Report_Name']} - ${map['Branch_Branch_Code']}').toList();
             check = searchResult.map((map) => map['is_check'] == 1).toList();
             });
@@ -1127,10 +920,10 @@ class SalesHeirarchyViewModel with ChangeNotifier {
                                               if (value ?? false) {
                                                 //.print(filteredItem[index].split(' - ')[1]);
                                                 selectedToAdd.add(filteredItembranch[index]);
-                                                updateIsCheckValuebranch(filteredItembranch[index].split(' - ')[1], true);
+                                                LocalDatabase.updateIsCheckValuebranch(filteredItembranch[index].split(' - ')[1], true);
                                               } else {
                                                 selectedToAdd.remove(filteredItembranch[index]);
-                                                updateIsCheckValuebranch(filteredItembranch[index].split(' - ')[1], false);
+                                                LocalDatabase.updateIsCheckValuebranch(filteredItembranch[index].split(' - ')[1], false);
                                               }
                                             });
                                           },
@@ -1192,30 +985,7 @@ class SalesHeirarchyViewModel with ChangeNotifier {
       },
     );
   }
-
-  List<String> selectedToAd = [];
-  List<String> filteredItem = [];
-  List<String> filteredItems = [];
-
-
-  bool selectall = false;
-  TextEditingController _textEditing = TextEditingController();
-  TextEditingController _textEditingbranch = TextEditingController();
-  void refreshSelectedToAddcompany() {
-    selectedToAd = [];
-  }
-  int selectedTabIndex = 0;
-  Future<void> showDropdownCheckboxs(
-      BuildContext context,
-      List<String> branch,
-      List<String> items,
-      List<String> initialSelectedValues,
-      String title,
-      List<bool> check,
-      List<bool> checkbranch,
-      void Function(List<String> selectedValuese) onDone,
-      void Function(List<String> branch) branchvalues,
-      void Function() onTapDone,) async {
+  Future<void> showDropdownCheckboxs(BuildContext context, List<String> branch, List<String> items, List<String> initialSelectedValues, String title, List<bool> check, List<bool> checkbranch, void Function(List<String> selectedValuese) onDone, void Function(List<String> branch) branchvalues, void Function() onTapDone,) async {
     double screenHeight = MediaQuery
         .of(context)
         .size
@@ -1320,7 +1090,7 @@ filteredItems=List.from(branch);
                                                   if(_textEditingController==''){
                                                     filteredItems = List.from(items);
                                                   }
-                                                  searchItems(_textEditingController).then((searchResult) {
+                                                  LocalDatabase.searchItems(_textEditingController).then((searchResult) {
                                                     filteredItem = searchResult.map((map) => '${map['Product_Company_Name']} - ${map['Product_Company_ID']}').toList();
                                                     check = searchResult.map((map) => map['is_check'] == 1).toList();
                                                   });
@@ -1397,14 +1167,14 @@ filteredItems=List.from(branch);
                                                   check[i] = true;
                                                   if (title == "Select Companies") {
                                                     selectedToAd.add(items[i]);
-                                                    updateCheck(true);
+                                                    LocalDatabase.updateCheck(true);
                                                   }
                                                 }
                                               } else {
                                                 for (int i = 0; i < check.length; i++) {
                                                   check[i] = false;
                                                   selectedToAd.remove(items[i]);
-                                                  updateCheck(false);
+                                                  LocalDatabase.updateCheck(false);
                                                   selectedToAd=[];
                                                 }
                                               }
@@ -1460,12 +1230,12 @@ filteredItems=List.from(branch);
                                                                   check[index] = value ?? false; // Update the value at the index
                                                                   if (value ?? false)  {
                                                                     selectedToAd.add(filteredItem[index]);
-                                                                    updateIsCheckValue(filteredItem[index].split(' - ')[1], true);
-                                                                    name();
+                                                                    LocalDatabase.updateIsCheckValue(filteredItem[index].split(' - ')[1], true);
+                                                                    LocalDatabase.name();
                                                                   } else {
                                                                     selectedToAd.remove(filteredItem[index]);
-                                                                    updateIsCheckValue(filteredItem[index].split(' - ')[1], false);
-                                                                    name();
+                                                                    LocalDatabase.updateIsCheckValue(filteredItem[index].split(' - ')[1], false);
+                                                                    LocalDatabase.name();
                                                                     // Data();
                                                                     // Pass the actual ID here
                                                                   }
@@ -1519,7 +1289,7 @@ filteredItems=List.from(branch);
 
                                           print("selectedtoadd: $selectedToAd");
                                           onTapDone();
-                                          name();
+                                          LocalDatabase.name();
                                         },
                                         style: ElevatedButton.styleFrom(
                                           primary: AppColors.greencolor,
@@ -1568,7 +1338,7 @@ controller: _textEditingbranch,
                                                     if(_textEditingbranch==''){
                                                       filteredItem = List.from(branch);
                                                     }
-                                                    searchbranch(_textEditingbranch).then((searchResult) {
+                                                    LocalDatabase.searchbranch(_textEditingbranch).then((searchResult) {
                                                       filteredItems = searchResult.map((map) => '${map['Branch_Branch_Report_Name']} - ${map['Branch_Branch_Code']}').toList();
                                                       checkbranch = searchResult.map((map) => map['is_check'] == 1).toList();
                                                     });
@@ -1697,10 +1467,10 @@ controller: _textEditingbranch,
                                                                     if (value ?? false) {
                                                                       //.print(filteredItem[index].split(' - ')[1]);
                                                                       selectedToAdd.add(branch[index]);
-                                                                      updateIsCheckValuebranch(branch[index].split(' - ')[1], true);
+                                                                      LocalDatabase.updateIsCheckValuebranch(branch[index].split(' - ')[1], true);
                                                                     } else {
                                                                       selectedToAdd.remove(branch[index]);
-                                                                      updateIsCheckValuebranch(branch[index].split(' - ')[1], false);
+                                                                     LocalDatabase.updateIsCheckValuebranch(branch[index].split(' - ')[1], false);
                                                                     }
                                                                   });
                                                                 },

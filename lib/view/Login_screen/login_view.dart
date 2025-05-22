@@ -1,5 +1,6 @@
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:mvvm/Local_database/db.dart';
 import 'package:mvvm/res/color.dart';
 import 'package:mvvm/res/components/round_button.dart';
 import 'package:mvvm/utils/utils.dart';
@@ -248,8 +249,8 @@ class _LoginViewState extends State<LoginView> {
                                     String depth =  prefs.getString('depth') ?? '';
                                     String empDesignation = prefs.getString('emp_designation') ?? '';
                                     if (empCode.isNotEmpty && empName.isNotEmpty) {
-                                      await salesViewModel.initializeDatabase();
-                                      final isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+                                      await LocalDatabase.initializeDatabase();
+                                      final isTableEmpty = await LocalDatabase.isheirarchyEmpty();
                                       if (!isTableEmpty) {
                                         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> Markattendance()));
                                       } else {
@@ -257,7 +258,7 @@ class _LoginViewState extends State<LoginView> {
 
                                         Utils.flushBarErrorMessage("Please sync your data", context);
                                       }
-                                      Utils.snackBar("Login Successful", context);
+                                      //Utils.snackBar("Login Successful", context);
                                       setState(() {
                                         empcode.updateValues(
                                             empCode,

@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../Local_database/db.dart';
 import '../../../res/color.dart';
 import '../../../respository/measure_repository.dart';
 import '../../../utils/Drawer.dart';
@@ -15,6 +16,7 @@ import '../../../utils/homeappbar.dart';
 import '../../../utils/utils.dart';
 import '../../Home/home_screen.dart';
 import '../../Executive_sale/Team_analysis/Sales_viewmodel.dart';
+
 import '../../Splash_screen/splash_view.dart';
 
 class Markattendance extends StatefulWidget {
@@ -51,11 +53,10 @@ class _MarkattendanceState extends State< Markattendance > {
 
 
   void delete() async {
-    await salesViewModel.initializeDatabase();
+    await LocalDatabase.initializeDatabase();
     if(lastSyncDate != DateFormat.yMd().format(DateTime.now()) )
     {
-      await salesViewModel.deletetable();
-      await repository.clearMeasures();
+      await LocalDatabase.deletetable();
     }
   }
 
@@ -120,20 +121,20 @@ class _MarkattendanceState extends State< Markattendance > {
                 children: [
 
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding:  EdgeInsets.all(8.0),
                     child: Container(
                       padding: EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.greencolor!.withOpacity(0.2),
-                            spreadRadius: 4,
-                            blurRadius: 10,
-                            offset: Offset(0, 5), // changes position of shadow
-                          ),
-                        ],
+                        color: Colors.blue.shade50.withOpacity(0.6),
+                        // boxShadow: [
+                        //   BoxShadow(
+                        //     color: AppColors.greencolor!.withOpacity(0.2),
+                        //     spreadRadius: 4,
+                        //     blurRadius: 10,
+                        //     offset: Offset(0, 5), // changes position of shadow
+                        //   ),
+                        // ],
                       ),
 
                       child: Row(
@@ -326,8 +327,8 @@ fontWeight: FontWeight.bold,
                   }
 
 
-                  await salesViewModel.initializeDatabase();
-                  bool isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+                  await LocalDatabase.initializeDatabase();
+                  final isTableEmpty = await LocalDatabase.isheirarchyEmpty();
 
                   if (!isTableEmpty) {
 
@@ -377,15 +378,16 @@ fontWeight: FontWeight.bold,
                   );
 
                   try {
-                    final measure = await measure_repository();
-                    await salesViewModel.initializeDatabase();
-                    await salesViewModel.fetchHeirarchyListApi();
-                    await salesViewModel.fetchTeamCompanyApi();
-                    await salesViewModel.fetchbranchapi();
-                    await measure.database();
-                    await measure.fetchDataAndSave();
-                    await salesViewModel.initializeDatabase();
-                    final isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+                   // final measure = await measure_repository();
+                    await LocalDatabase.initializeDatabase();
+                   await  LocalDatabase.getHeirarchy();
+                    //await salesViewModel.initializeDatabase();
+                   // await salesViewModel.fetchHeirarchyListApi();
+                    await LocalDatabase.get_companies();
+                    await LocalDatabase.get_branches();
+                    await LocalDatabase.get_measures();
+                   // await salesViewModel.initializeDatabase();
+                    final isTableEmpty = await LocalDatabase.isheirarchyEmpty();
                     if(!isTableEmpty){
                       setState(() {
                         lastSyncDate = DateFormat.yMd().format(DateTime.now());
@@ -577,15 +579,15 @@ class lasttimedate extends StatelessWidget
         padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.greencolor!.withOpacity(0.2),
-            spreadRadius: 4,
-            blurRadius: 10,
-            offset: Offset(0, 5), // changes position of shadow
-          ),
-        ],
+        color: Colors.blue.shade50.withOpacity(0.6),
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: AppColors.greencolor!.withOpacity(0.2),
+        //     spreadRadius: 4,
+        //     blurRadius: 10,
+        //     offset: Offset(0, 5), // changes position of shadow
+        //   ),
+        // ],
       ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -630,20 +632,22 @@ class DateDisplayWidget extends StatelessWidget
         padding: EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.greencolor!.withOpacity(0.2),
-              spreadRadius: 4,
-              blurRadius: 10,
-              offset: Offset(0, 5), // changes position of shadow
-            ),
-          ],
+          color: Colors.blue.shade50.withOpacity(0.6),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: AppColors.greencolor!.withOpacity(0.2),
+          //     spreadRadius: 4,
+          //     blurRadius: 10,
+          //     offset: Offset(0, 5), // changes position of shadow
+          //   ),
+          // ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   "Current Date",
@@ -665,10 +669,14 @@ class DateDisplayWidget extends StatelessWidget
               ],
             ),
 
-            Container(
-              width: 1,
-              height: 30, // Adjust height to fit your needs
-              color: AppColors.greencolor,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+
+                width: 1,
+                height: 30, // Adjust height to fit your needs
+                color: AppColors.greencolor,
+              ),
             ),
             SizedBox(width: 8),
             Column(
@@ -739,19 +747,20 @@ class _CurrentTimeWidgetState extends State<CurrentTimeWidget>
         width: 300,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.blue.shade50.withOpacity(0.6),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.greencolor!.withOpacity(0.2),
-              spreadRadius: 4,
-              blurRadius: 10,
-              offset: Offset(0, 5),
-            ),
-          ],
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: AppColors.greencolor!.withOpacity(0.2),
+          //     spreadRadius: 4,
+          //     blurRadius: 10,
+          //     offset: Offset(0, 5),
+          //   ),
+          // ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               widget.currentTimes.toString(),

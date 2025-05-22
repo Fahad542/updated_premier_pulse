@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mvvm/Local_database/db.dart';
 import 'package:mvvm/res/color.dart';
 import 'package:mvvm/res/components/round_button.dart';
 import 'package:mvvm/utils/utils.dart';
@@ -127,9 +128,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                               color: AppColors.greencolor,
                             ),
                             onTap: () async {
-                              await salesViewModel.initializeDatabase();
+                              await LocalDatabase.initializeDatabase();
                               final isTableEmpty =
-                              await salesViewModel.isDatabaseTableEmpty();
+                              await LocalDatabase.isheirarchyEmpty();
                               if (!isTableEmpty) {
                                 Navigator.pop(context);
                                 Navigator.push(
@@ -156,9 +157,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                               color: AppColors.greencolor,
                             ),
                             onTap: () async {
-                              await salesViewModel.initializeDatabase();
+                              await LocalDatabase.initializeDatabase();
                               final isTableEmpty =
-                              await salesViewModel.isDatabaseTableEmpty();
+                              await LocalDatabase.isheirarchyEmpty();
                               if (!isTableEmpty) {
                                 Navigator.push(
                                   context,

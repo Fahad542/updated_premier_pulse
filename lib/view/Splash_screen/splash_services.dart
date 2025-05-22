@@ -5,6 +5,7 @@ import 'package:mvvm/view/Executive_sale/Team_analysis/Sales_viewmodel.dart';
 import 'package:mvvm/view/Login_screen/login_view.dart';
 import 'package:mvvm/view/Splash_screen/user_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Local_database/db.dart';
 import '../../model/auth_model.dart';
 import '../Attendance/Mark_Attandance/Mark Attendance_view.dart';
 
@@ -30,10 +31,10 @@ class SplashServices {
       print("Depth: ${value.Depth.toString()}");
       print('username: $username');
       print('password: $password');
-      await salesViewModel.initializeDatabase();
+      await LocalDatabase.initializeDatabase();
       if(lastSyncDate != DateFormat.yMd().format(DateTime.now()) )
       {
-        salesViewModel.deletetable();
+        LocalDatabase.deletetable();
       }
       empcode.name=value.EmpName.toString();
       empcode.auth=value.EmpCode.toString();
@@ -47,8 +48,8 @@ class SplashServices {
       else
       {
         await Future.delayed(Duration(seconds: 3));
-        await salesViewModel.initializeDatabase();
-        final isTableEmpty = await salesViewModel.isDatabaseTableEmpty();
+        await LocalDatabase.initializeDatabase();
+        final isTableEmpty = await LocalDatabase.isheirarchyEmpty();
         if (!isTableEmpty)
         {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Markattendance()));

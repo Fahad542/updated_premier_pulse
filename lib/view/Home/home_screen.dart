@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:mvvm/Local_database/db.dart';
 import 'package:mvvm/model/pichart_model.dart';
 import 'package:mvvm/model/sales_model.dart';
 import 'package:mvvm/respository/company_wise.dart';
@@ -126,8 +127,8 @@ class _SalesReportState extends State<HomeScreen> {
   {
     empCodeString='';
     userDetailsList.clear();
-    await salesViewModel.initializeDatabase();
-    final data = await salesViewModel.select(reporting,'1');
+    await LocalDatabase.initializeDatabase();
+    final data = await LocalDatabase.select(reporting,'1');
     setState(() {
       userDetailsList = data;
       for (final item in userDetailsList) {

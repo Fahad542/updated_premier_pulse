@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:mvvm/Local_database/db.dart';
 import 'package:mvvm/res/color.dart';
 import '../../model/measures.dart';
 import '../../respository/measure_repository.dart';
@@ -21,7 +22,7 @@ class filters extends StatefulWidget {
 }
 
 class _FiltersState extends State<filters> {
-  final repository = measure_repository();
+  //final repository = measure_repository();
 
   List<String> groupNames = [];
   List<String> selectedValues = [];
@@ -37,7 +38,7 @@ class _FiltersState extends State<filters> {
   }
 
   Future<void> fetchGroupNames() async {
-    final List<Measure> measures = await repository.getAllMeasuresGroupByGroupName();
+    final List<Measure> measures = await LocalDatabase.getAllMeasuresGroupByGroupName();
     setState(() {
       groupNames = measures.map((measure) => measure.measureGroupName).toList();
     });
@@ -156,7 +157,7 @@ class _FiltersState extends State<filters> {
                     children: groupNames.map((groupName) {
                       return FilterGroup(
                         groupName: groupName,
-                        repository: repository,
+                       // repository: repository,
                         onSelectionChanged: updateSelectedValues,
                         selectedValues: selectedValues,
                        // onClearAll: clearAllCheckBoxes,
@@ -207,12 +208,12 @@ class _FiltersState extends State<filters> {
 
 class FilterGroup extends StatefulWidget {
   final String groupName;
-  final measure_repository repository;
+ // final measure_repository repository;
   final Function(String, bool) onSelectionChanged;
   final List<String> selectedValues;
   FilterGroup( {
     required this.groupName,
-    required this.repository,
+  //  required this.repository,
     required this.onSelectionChanged,
     required this.selectedValues,
   });
@@ -232,7 +233,7 @@ class _FilterGroupState extends State<FilterGroup> {
   }
 
   Future<void> fetchDisplayFolders() async {
-    List<String> folders = await widget.repository.getDisplayFoldersByGroupName(widget.groupName);
+    List<String> folders = await LocalDatabase.getDisplayFoldersByGroupName(widget.groupName);
     setState(() {
       displayFolders = folders;
     });
@@ -280,7 +281,7 @@ class _FilterGroupState extends State<FilterGroup> {
                 children: displayFolders.map((folder) {
                   return FolderItem(
                     folderName: folder,
-                    repository: widget.repository,
+                    //repository: widget.repository,
                     onSelectionChanged: widget.onSelectionChanged,
                     selectedValues: widget.selectedValues,
                     //onClearAll: widget.onClearAll,
@@ -298,14 +299,14 @@ class _FilterGroupState extends State<FilterGroup> {
 class FolderItem extends StatefulWidget {
   final String folderName;
   final String groupName;
-  final measure_repository repository;
+ // final measure_repository repository;
   final Function(String, bool) onSelectionChanged;
   final List<String> selectedValues;
 
   FolderItem( {
     required this.groupName,
     required this.folderName,
-    required this.repository,
+   /// required this.repository,
     required this.onSelectionChanged,
     required this.selectedValues,
 
@@ -333,7 +334,7 @@ class _FolderItemState extends State<FolderItem> {
   }
 
   Future<void> fetchDisplayNames() async {
-    List<String> names = await widget.repository.getDisplayFoldersByName(widget.folderName, widget.groupName);
+    List<String> names = await LocalDatabase.getDisplayFoldersByName(widget.folderName, widget.groupName);
     setState(() {
       displayNames = names;
       isCheckedList = displayNames.map((name) => widget.selectedValues.contains(name)).toList();

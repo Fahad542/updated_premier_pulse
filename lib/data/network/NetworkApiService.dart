@@ -53,7 +53,29 @@ class NetworkApiService extends BaseApiServices {
 
     return responseJson ;
   }
+  Future getPostApiResponsewithheader(String url , dynamic data) async
+  {
 
+    dynamic responseJson ;
+    try {
+      Map<String, String> headers = {
+        'Authorization': 'Basic UHJFbSFlci5Hcm91cCQkJCsrOkNyRThpVmUmKl4xMjM0NTYrKw==',
+        'Pr3mKEY': 'W74=Jse==ZU1JWR158TjJuUjlVN@t3Zz09', // Assuming content type is JSON
+      };
+      Response response = await post(
+          Uri.parse(url),
+          body: data,
+        headers: headers
+      ).timeout(Duration(seconds: 10));
+
+      responseJson = returnResponse(response);
+    } on SocketException {
+
+      throw FetchDataException('No Internet Connection');
+    }
+
+    return responseJson ;
+  }
 
   @override
   Future getPostApiResponsewithheaders(String url , dynamic data) async
