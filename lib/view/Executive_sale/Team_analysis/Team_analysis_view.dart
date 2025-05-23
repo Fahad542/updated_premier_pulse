@@ -331,18 +331,18 @@ class Team_analysis extends StatefulWidget {
                       },
                       child: Image.asset("assets/growth.png", height: 20, width: 20, color: AppColors.primary),
                     ),
-                  if(user.isCheck == true)
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          salesViewModel.erpemployee.clear();
-                          salesViewModel.erp_Employee_controller.clear();
-                        });
-
-                        salesViewModel.get_erp_employees(context, user.empName, user.empCode);
-                      },
-                      child: Image.asset("assets/plus.icon.png", height: 20, width: 20, color: AppColors.primary),
-                    ),
+                  // if(user.isCheck == true)
+                  //   InkWell(
+                  //     onTap: () {
+                  //       setState(() {
+                  //         salesViewModel.erpemployee.clear();
+                  //         salesViewModel.erp_Employee_controller.clear();
+                  //       });
+                  //
+                  //       salesViewModel.get_erp_employees(context, user.empName, user.empCode);
+                  //     },
+                  //     child: Image.asset("assets/plus.icon.png", height: 20, width: 20, color: AppColors.primary),
+                  //   ),
                 ],
               ),
             ),
@@ -1570,7 +1570,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
                       children: [
-
+//Text(salesid),
                     Container(
                     height: 230,
                     decoration: BoxDecoration(
