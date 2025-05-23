@@ -71,7 +71,7 @@ class _MarkattendanceState extends State< Markattendance > {
   @override
   void initState() {
     get();
-    delete();
+   // delete();
     version v =version();
 
     super.initState();

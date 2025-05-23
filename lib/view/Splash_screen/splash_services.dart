@@ -32,10 +32,10 @@ class SplashServices {
       print('username: $username');
       print('password: $password');
       await LocalDatabase.initializeDatabase();
-      if(lastSyncDate != DateFormat.yMd().format(DateTime.now()) )
-      {
-        LocalDatabase.deletetable();
-      }
+      // if(lastSyncDate != DateFormat.yMd().format(DateTime.now()) )
+      // {
+      //   LocalDatabase.deletetable();
+      // }
       empcode.name=value.EmpName.toString();
       empcode.auth=value.EmpCode.toString();
       empcode.designation=value.EmpDesignation.toString();

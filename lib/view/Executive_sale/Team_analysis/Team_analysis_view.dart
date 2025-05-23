@@ -1251,7 +1251,7 @@ mainAxisAlignment: MainAxisAlignment.spaceBetween,
               title: name.split("||")[0],
 
               actions: [
-
+                if(name != "Untagged")
                 InkWell(
                     onTap: () async {
 
